@@ -1,4 +1,6 @@
+#include <stdio.h>
 #include <iostream>
+#include <sstream>
 extern "C" {
     #include "extApi.h"
     #include "extApiCustom.h"
@@ -12,6 +14,7 @@ VREPClient::VREPClient() :
     _motors(),
     _motorsByName(),
     _forceSensors(),
+    _visionSensors(),
     _accelerometerXRead(0),
     _accelerometerYRead(0),
     _accelerometerZRead(0),
@@ -38,6 +41,8 @@ void VREPClient::connect(const char* ip, int port)
     scanMotors();
     //Retrieve force sensors
     scanForceSensors();
+		//Retrieve vision sensors
+		scanVisionSensors();
 }
 
 void VREPClient::disconnect() const
@@ -54,6 +59,12 @@ size_t VREPClient::countForceSensors() const
 {
     return _forceSensors.size();
 }
+
+size_t VREPClient::countVisionSensors() const
+{
+    return _visionSensors.size();
+}
+
 
 const Motor& VREPClient::getMotor(size_t index) const
 {
@@ -89,6 +100,7 @@ const ForceSensor& VREPClient::getForceSensor(size_t index) const
         return _forceSensors[index];
     }
 }
+
 ForceSensor& VREPClient::getForceSensor(size_t index)
 {
     if (index >= _forceSensors.size()) {
@@ -98,6 +110,23 @@ ForceSensor& VREPClient::getForceSensor(size_t index)
     }
 }
 
+const VisionSensor& VREPClient::getVisionSensor(size_t index) const
+{
+    if (index >= _visionSensors.size()) {
+        throw std::string("Invalid force sensor index");
+    } else {
+        return _visionSensors[index];
+    }
+}
+
+VisionSensor& VREPClient::getVisionSensor(size_t index)
+{
+    if (index >= _visionSensors.size()) {
+        throw std::string("Invalid force sensor index");
+    } else {
+        return _visionSensors[index];
+    }
+}
 double VREPClient::readAccelerometerX() const
 {
     return _accelerometerXRead;
@@ -158,6 +187,16 @@ void VREPClient::start()
                 throw std::string("Unable to set up force sensor streaming");
             }
         }
+
+        //Start vision sensor data streaming
+        for (size_t i=0;i<_visionSensors.size();i++) {
+            simxInt error = simxReadVisionSensor(_id, _visionSensors[i].getHandle(), 
+                NULL, NULL, NULL, simx_opmode_streaming);
+            if (error != simx_error_noerror && error != simx_error_novalue_flag) {
+                throw std::string("Unable to set up vision sensor streaming");
+            }
+        }
+
         //Start accelerometer data streaming
         simxFloat accelero;
         error = simxGetFloatSignal(_id, "accelerometerX", &accelero, simx_opmode_streaming);
@@ -199,6 +238,7 @@ void VREPClient::start()
         throw std::string("Unable to pause communication");
     }
 }
+
 void VREPClient::stop()
 {
     simxInt error;
@@ -229,6 +269,10 @@ void VREPClient::nextStep()
     //Update force sensors data
     for (size_t i=0;i<_forceSensors.size();i++) {
         _forceSensors[i].update(*this);
+    }
+    //Update vision sensors data
+    for (size_t i=0;i<_visionSensors.size();i++) {
+        _visionSensors[i].update(*this);
     }
     //Update accelerometer sensor
     readAccelerometer();
@@ -296,6 +340,29 @@ void VREPClient::scanForceSensors()
         _forceSensors[i].load(*this);
     }
 }
+
+void VREPClient::scanVisionSensors()
+{
+    simxInt sensorCount = 0;
+    simxInt* sensorArray = NULL;
+    //Get force sensor
+    if (
+        simxGetObjects(_id, sim_object_visionsensor_type, &sensorCount, &sensorArray, 
+        simx_opmode_oneshot_wait) != simx_error_noerror
+    ) {
+        throw std::string("Unable to retrieve vision sensor handles");
+    }
+    //Save force sensor
+    _visionSensors.clear();
+    for (int i=0;i<sensorCount;i++) {
+        _visionSensors.push_back(sensorArray[i]);
+    }
+    //Load force sensor data
+    for (int i=0;i<sensorCount;i++) {
+        _visionSensors[i].load(*this);
+    }
+}
+
 
 std::string VREPClient::getNameFromHandle(simxInt handle) const
 {
@@ -476,4 +543,88 @@ void VREPClient::readPositionTracker()
     _positionTrackerYRead = posY;
     _positionTrackerZRead = posZ;
 }
+
+/**
+ * Read state on a vision Sensor. Does not perform detection
+ **/
+void VREPClient::readVisionSensor(simxInt handle, simxFloat** auxValues,
+																	simxInt** auxValuesCount,simxInt operationMode)
+{
+	simxInt error=-1;
+	static bool first_call=true;
+	if(first_call)
+	{
+		error = simxReadVisionSensor(_id, handle, NULL,
+				auxValues, auxValuesCount, simx_opmode_streaming);
+		first_call=false;
+	}
+	else
+	{
+		error = simxReadVisionSensor(_id, handle, NULL,
+				auxValues, auxValuesCount, simx_opmode_buffer);
+	}
+	if(error!=simx_error_noerror) {
+    throw std::string("Unable to read vision sensor");
+	}
+	return;
+}
+
+/**
+ * Retrieve the depth buffer from vision sensor
+ **/
+void VREPClient::getVisionSensorDepthBuffer(simxInt sensorHandle, simxInt* resolution, simxFloat** buffer)
+{
+	static int first_call = true;
+	simxInt error = -1;
+	if (first_call)
+	{
+		error = simxGetVisionSensorDepthBuffer(_id, sensorHandle, resolution, buffer, simx_opmode_streaming_split+4000);
+		first_call=false;
+	}
+	else
+	{
+		error = simxGetVisionSensorDepthBuffer(_id, sensorHandle, resolution, buffer, simx_opmode_buffer);
+	}
+	if(error==simx_return_novalue_flag)
+	{
+		std::cout<<"Vision sensor no depth buffer returned"<<std::endl;
+	}
+	else if(error!=simx_error_noerror) {
+		std::ostringstream stringstream;
+		stringstream <<"Unable to get depth buffer from vision sensor, code: "<<error;
+    throw stringstream.str();
+	}
+	return;
+}
+
+/**
+ * Get image in float from vision sensor
+ **/
+void VREPClient::getVisionSensorImage(simxInt sensorHandle, simxInt* resolution, simxUChar** image)
+{
+	static int first_call = true;
+	simxInt error=-1;
+	if (first_call)
+	{
+		error=simxGetVisionSensorImage(_id, sensorHandle, resolution,
+				image, 0x00, simx_opmode_streaming+500);
+//		first_call=false;
+	}
+	else
+	{
+		error=simxGetVisionSensorImage(_id, sensorHandle, resolution,
+				image, 0x00, simx_opmode_buffer);
+	}
+	if(error==simx_return_novalue_flag)
+	{
+		std::cout<<"Vision sensor no image returned"<<std::endl;
+	}
+	else if(error!=simx_error_noerror) {
+		std::stringstream stringstream;
+		stringstream <<"Unable to get image from vision sensor, code: "<<error;
+    throw stringstream.str();
+	}
+	return;
+}
+
 

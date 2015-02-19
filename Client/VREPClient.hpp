@@ -8,6 +8,7 @@
 #include "Object.hpp"
 #include "Motor.hpp"
 #include "ForceSensor.hpp"
+#include "VisionSensor.hpp"
 
 /**
  * Handle V-REP Server communication with the
@@ -50,6 +51,11 @@ class VREPClient
         size_t countForceSensors() const;
 
         /**
+         * Return the number of visual sensors
+         */
+				size_t countVisionSensors() const;
+
+        /**
          * Return a motor by its index
          */
         const Motor& getMotor(size_t index) const;
@@ -65,6 +71,13 @@ class VREPClient
          */
         const ForceSensor& getForceSensor(size_t index) const;
         ForceSensor& getForceSensor(size_t index);
+
+        /**
+         * Return a vision sensor by its index
+         */
+        const VisionSensor& getVisionSensor(size_t index) const;
+        VisionSensor& getVisionSensor(size_t index);
+
 
         /**
          * Return accelerometer value
@@ -109,6 +122,11 @@ class VREPClient
          * Retrieve all force sensors handle
          */
         void scanForceSensors();
+        
+        /**
+         * Retrieve all vision sensors handle
+         */
+        void scanVisionSensors();
         
         /**
          * Retrieve the identifier name of the given
@@ -179,6 +197,21 @@ class VREPClient
          */
         void readPositionTracker();
 
+				/**
+				 * Read state on a vision Sensor. Does not perform detection
+				 **/
+				void readVisionSensor(simxInt sensorHandle, simxFloat** auxValues,
+																	simxInt** auxValuesCount,simxInt operationMode);
+				/**
+				 * Retrieve the depth buffer from vision sensor
+				 **/
+				void getVisionSensorDepthBuffer(simxInt sensorHandle, simxInt* resolution, simxFloat** buffer);
+
+				/**
+				 * Get image in float from vision sensor
+				 **/
+				void getVisionSensorImage(simxInt sensorHandle, simxInt* resolution, simxUChar** image);
+
         /**
          * Is the value streaming has to be initialized
          */
@@ -198,6 +231,11 @@ class VREPClient
          * Force sensor container
          */
         std::vector<ForceSensor> _forceSensors;
+
+        /**
+         * Force sensor container
+         */
+        std::vector<VisionSensor> _visionSensors;
 
         /**
          * Accelerometer value
@@ -220,6 +258,7 @@ class VREPClient
         friend class Object;
         friend class Motor;
         friend class ForceSensor;
+        friend class VisionSensor;
 };
 
 #endif

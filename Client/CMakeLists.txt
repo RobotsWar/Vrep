@@ -14,14 +14,12 @@ execute_process (COMMAND "/bin/bash" "-c" "cd ${VREP_ROOT}; Addon/links.sh ${VRE
 #Recompile Vrep parts which are overloaded by our implementation
 execute_process (COMMAND "/bin/bash" "-c" "cd ${VREP_ROOT}/Vrep/programming/v_repExtRemoteApi; make -f makefile")
 execute_process (COMMAND "/bin/bash" "-c" "cp ${VREP_ROOT}/Vrep/programming/v_repExtRemoteApi/lib/libv_repExtRemoteApi.so ${VREP_ROOT}/Vrep/")
-execute_process (COMMAND "/bin/bash" "-c" "cd ${VREP_ROOT}/Vrep/programming/v_repExtUrdf; qmake v_repExtUrdf.pro; make")
-execute_process (COMMAND "/bin/bash" "-c" "cp ${VREP_ROOT}/Vrep/programming/v_repExtUrdf/libv_repExtUrdf.so ${VREP_ROOT}/Vrep/")
 
 set (VREP_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/../Vrep/programming/"
     CACHE "The VRep build path" STRING)
 
-set (SOURCES VREPClient.cpp Motor.cpp Object.cpp ForceSensor.cpp 
+set (SOURCES VREPClient.cpp Motor.cpp Object.cpp ForceSensor.cpp VisionSensor.cpp
     ${VREP_ROOT}/Vrep/programming/remoteApi/extApi.c
     ${VREP_ROOT}/Vrep/programming/remoteApi/extApiCustom.c
     ${VREP_ROOT}/Vrep/programming/remoteApi/extApiPlatform.c)

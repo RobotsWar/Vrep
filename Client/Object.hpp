@@ -5,6 +5,7 @@
 class VREPClient;
 typedef int simxInt;
 typedef float simxFloat;
+typedef unsigned char simxUChar;
 
 /**
  * Base class
