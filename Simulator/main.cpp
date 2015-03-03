@@ -26,7 +26,7 @@ static void print_image(unsigned char* image, int* resolution)
     HardwareImage img;
     img.width = resolution[0];
     img.height = resolution[1];
-    img.data = std::string((char*)image, img.width*img.height);
+    img.data = std::string((char*)image, img.width*img.height*3);
     server.sendImage(img);
 }
 
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
         //Main Loop
         cout << "Starting simulation" << endl;
         VREP.start();
-        for (double t=0;t<60.0;t+=0.050) {
+        for (double t=0;true;t+=0.050) {
             //Display state
             cout << "Simulation step t=" << t << endl;
             displayState();
