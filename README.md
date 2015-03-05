@@ -1,45 +1,17 @@
-V-REP
-====
+# V-REP
 
-V-REP version for RhobanProject (education)
+Tout d'abord:
 
-Directories:
-------------
+apt-get install libzmq3-dev
 
-- Addon: Altered files of V-REP for custom remote API commands
-- Models: Robots models for V-REP
-- Scenes: Simulations set up
-- Client: Simple interface for communicating with V-REP running simulation
-- Example: Basic example moving robot and printing all sensors values
-- Vrep: Containts V-REP 3.1.0 
+Pour faire marcher la simulation:
 
-Installation:
--------------
+1) Cloner ce dépôt
+2) Télécharger vrep et le placer dans le sous-dossier Vrep de ce dépôt
+3) Aller dans Client/ puis taper "mkdir build; cd build; cmake ..; make"
+4) Aller dans Simulator/, puis taper "mkdir build; cd build; cmake ..; make"
+5) Dans Simulator/build, lancer ./vrep puis ./Client localhost 4242
+6) Clonner Soccer et dans AI taper "mkdir build; cd build; cmake .."
+7) Vous pouvez lancer AI dans Simulator/build
 
-- Copy V-REP 3.1.0 directory to Vrep/
-
-Compiling:
-----------
-
-- mkdir Client/build/ ; cd Client/build/
-- cmake .. #Build V-REP remote API custom commands
-- make #Build Client into library
-- mkdir Example/build ; cd Example/build/ 
-- cmake ..
-- make #Build example against Client library
-
-Run:
-----
-
-- cd Example/build/
-- ./vrep
-- ./Client 127.0.0.1 4242
-
-Models:
--------
-
-- Rendered model is different than physical used dynamic model
-- Prefert simple shapes (or convex) for approximating dynamic model
-- Joints must be revolute, position not cyclic, mode force/torque, 
-  position control enabled, force/torque regulated
 
