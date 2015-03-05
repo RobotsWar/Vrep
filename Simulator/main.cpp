@@ -26,7 +26,10 @@ static void print_image(unsigned char* image, int* resolution)
     HardwareImage img;
     img.width = resolution[0];
     img.height = resolution[1];
-    img.data = std::string((char*)image, img.width*img.height*3);
+    int size = img.width*img.height*3;
+    for (int k=0; k<size; k++) {
+        img.data += image[k];
+    }
     server.sendImage(img);
 }
 

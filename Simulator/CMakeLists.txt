@@ -9,7 +9,7 @@ set (SOCCER_ROOT
     "${CMAKE_CURRENT_SOURCE_DIR}/../../Soccer"
     CACHE "Soccer root dir" STRING)
 
-set (CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-reorder -pedantic -U__STRICT_ANSI__")
+set (CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-reorder -pedantic")
 
 execute_process (COMMAND "/bin/bash" "-c" "cd ${VREP_ROOT}; echo -n `pwd`"
     OUTPUT_VARIABLE VREP_ROOT)
