@@ -24,7 +24,7 @@ set (CLIENT_PATH
 include_directories (${CLIENT_PATH} ${SOCCER_ROOT}/Hardware)
 link_directories (${CLIENT_PATH}/build)
 
-set (SOURCES main.cpp kinematic.cpp function.cpp)
+set (SOURCES main.cpp)
 
 set (SOURCES
     ${SOURCES}
